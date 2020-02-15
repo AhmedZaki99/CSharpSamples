@@ -7,9 +7,13 @@ using System.Threading.Tasks;
 
 namespace CollectionsMemoryUsage
 {
-    public interface ICategorizer
+    public class ArrayCategorizer : ICategorizer
     {
 
-        Task CategorizeFileTypesAsync(string path);
+        public async Task CategorizeFileTypesAsync(string path)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }

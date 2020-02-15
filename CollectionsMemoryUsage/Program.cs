@@ -12,12 +12,12 @@ namespace CollectionsMemoryUsage
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Press any key to start processing ..");
-            Console.ReadKey(true);
             Console.WriteLine();
 
 
-            await Categorize(null);
+            ICategorizer categorizer = new EnumerationCategorizer();
+
+            await Categorize(categorizer);
 
 
             Console.WriteLine();
@@ -31,6 +31,7 @@ namespace CollectionsMemoryUsage
             {
                 Console.Write("Type in the directory you want to categorize its files : ");
                 string path = Console.ReadLine();
+                Console.WriteLine();
 
                 if (!Directory.Exists(path))
                 {
@@ -44,7 +45,7 @@ namespace CollectionsMemoryUsage
                 {
                     Task awaiter = VisualizeWaitingAsync(cts.Token);
 
-                    await categorizer.CategorizeFileTypeAsync();
+                    await categorizer.CategorizeFileTypesAsync(path);
 
                     cts.Cancel();
                 }
@@ -52,7 +53,7 @@ namespace CollectionsMemoryUsage
                 Console.WriteLine("\nDone.");
                 Console.WriteLine("If you want to start another categorization process press 'Enter'.");
 
-                if (Console.ReadKey().Key == ConsoleKey.Enter)
+                if (Console.ReadKey().Key != ConsoleKey.Enter)
                 {
                     break;
                 }
@@ -76,8 +77,8 @@ namespace CollectionsMemoryUsage
                 if (looper == 3)
                 {
                     looper = 0;
-                    Console.Write("\r                   ");
-                    Console.Write("\rAnalyzing files ");
+                    Console.Write("\r                      ");
+                    Console.Write("\rCategorizing files ");
                 }
                 else looper++;
             }
