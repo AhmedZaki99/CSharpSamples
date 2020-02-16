@@ -43,10 +43,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Categorizers\ArrayCategorizer.cs" />
-    <Compile Include="Categorizers\EnumerationCategorizer.cs" />
+    <Compile Include="Categorizers\1\ArrayCategorizer.cs" />
+    <Compile Include="Categorizers\3\EnumerationCategorizer.cs" />
     <Compile Include="ICategorizer.cs" />
-    <Compile Include="Categorizers\ListCategorizer.cs" />
+    <Compile Include="Categorizers\2\ListCategorizer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

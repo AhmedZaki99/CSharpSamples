@@ -15,9 +15,26 @@ namespace CollectionsMemoryUsage
             Console.WriteLine();
 
 
-            ICategorizer categorizer = new EnumerationCategorizer();
+            // The diagnostics data of the process of categorizing files in my "C" drive 
+            // after collecting all of them together in an array shows that it took about 
+            // an hour (70 minutes) to complete, and consumed about half a Gigabyte
+            // of memory (460 MB), which is a disaster!
+            ICategorizer arrayCategorizer = new ArrayCategorizer();
 
-            await Categorize(categorizer);
+            // The diagnostics data of the same process, after adding all of the files to
+            // a list instead of collecting them in an array, shows that it took about 
+            // 70 seconds to complete, and consumed about 270 MB of memory, which is 
+            // relatively fast but still consuming a lot of memory.
+            ICategorizer listCategorizer = new ListCategorizer();
+
+            // And when we applied the enumerators logic to collect the data required (file extension)
+            // of each file at a time and group them as types and files count, without holding
+            // all the data together in memory, the diagnostics data shows that it took only 37
+            // seconds to complete, and consumed only 20 MB of memory, which is - in respect to the
+            // other processes - very efficient way of doing this process.
+            ICategorizer EnumerationCategorizer = new EnumerationCategorizer();
+
+            await Categorize(EnumerationCategorizer);
 
 
             Console.WriteLine();

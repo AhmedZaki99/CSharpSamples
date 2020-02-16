@@ -20,11 +20,20 @@ namespace CollectionsMemoryUsage
             watch.Start();
 
 
-            // Using "Enumerable.GroupBy()" here is very fast yet very expensive on memory.
-            //var fileTypes = await Task.Run(() => GetFileTree(info).GroupBy(f => f.Extension, (type, files) => new { Key = type, Value = files.Count() }).OrderByDescending(i => i.Value));
+            // Using "Enumerable.GroupBy()" here in this specific case loses the logic we're trying to apply
+            // and starts by collecting the collection of "FileInfo" first to group and order them, which
+            // is still expensive on memory.
+            //--------------------------------------------------------
+            //var fileTypes = await Task.Run(() =>
+            //{
+            //    return GetFileTree(info).GroupBy(f => f.Extension, (type, files) => new { Key = type, Value = files.Count() }).OrderByDescending(i => i.Value);
+            //});
+            //--------------------------------------------------------
 
 
+            // So we made a grouping function that only cares about the type of data we're trying to collect (type and count).
             var fileTypes = (await GroupFilesByTypeAsync(info)).OrderByDescending(i => i.Value);
+
 
             foreach (var type in fileTypes)
             {
