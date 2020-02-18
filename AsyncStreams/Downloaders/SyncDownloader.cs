@@ -10,17 +10,25 @@ namespace AsyncStreams
 {
     public class SyncDownloader : IDownloader
     {
+        // The location at which the images are temporarily stored.
         public string TempDownloadLocation => @"C:\Users\ahmed\Downloads\temp\";
 
 
         public async Task DownloadImages(IEnumerable<string> urls, string location)
         {
-            var images = SaveImagesAsFiles(urls);
+            // The "IEnumerable" function that will save the images each at a time,
+            // when "MoveNext()" is called.
+            var images = SaveImages(urls);
 
+            // Download and move images to the given location.
             await Task.Run(() => MoveDownloadedFiles(images, location));
         }
 
 
+        /// <summary>
+        /// A function that shows the compiler translation of "foreach" statement,
+        /// which uses the "IEnumerator.MoveNext()" function to fetch the next result.
+        /// </summary>
         private void MoveDownloadedFilesDecomposed(IEnumerable<string> files, string location)
         {
             var enumerator = files.GetEnumerator();
@@ -58,7 +66,7 @@ namespace AsyncStreams
         }
 
 
-        private IEnumerable<string> SaveImagesAsFiles(IEnumerable<string> urls)
+        private IEnumerable<string> SaveImages(IEnumerable<string> urls)
         {
             using WebClient client = new WebClient();
 

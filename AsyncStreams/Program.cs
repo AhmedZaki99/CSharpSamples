@@ -28,7 +28,7 @@ namespace AsyncStreams
 
 
 
-            var imagesUrls = ImagesIds[0..3].Select(i => UrlById(i));
+            var imagesUrls = ImagesIds[0..9].Select(i => UrlById(i));
 
 
             IDownloader syncDownloader = new SyncDownloader();
