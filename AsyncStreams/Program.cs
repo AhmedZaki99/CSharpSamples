@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 
 namespace AsyncStreams
@@ -10,14 +7,18 @@ namespace AsyncStreams
     class Program
     {
 
-        private const string WebsiteURL = "https://wallpaperaccess.com/full/";
+        /// <summary>
+        /// Change to control download type.
+        /// </summary>
+        private static readonly bool _isAsync = true;
 
-        private const string SaveLocation = @"E:\Pictures\Downloaded Images\";
 
+        private static string WebsiteURL { get; } = "https://wallpaperaccess.com/full";
 
-        public static string[] ImagesIds => new string[] { "405499", "405461", "405470", "405489", "7281", "405538", "38193", "207509", "39640", "405435" };
-
-        private static string UrlById(string id) => $"{WebsiteURL}{id}.jpg";
+        /// <summary>
+        /// Ids starting with the letter 'f' are intended to fail downloading, remove the letter 'f' to download.
+        /// </summary>
+        private static string[] ImagesIds { get; } = { "405499", "f405461", "405470", "f405489", "7281", "f405538", "38193", "207509", "39640", "405435" };
 
 
         static async Task Main()
@@ -27,20 +28,20 @@ namespace AsyncStreams
             Console.WriteLine();
 
 
+            if (_isAsync)
+            {
+                var downloader = new AsyncDownloader();
+                await downloader.DownloadImagesAsync(ImagesIds.Select(id => UrlById(id)));
 
-            var imagesUrls = ImagesIds[0..9].Select(i => UrlById(i));
+                downloader.CleanUpTemp();
+            }
+            else
+            {
+                var downloader = new SyncDownloader();
+                downloader.DownloadImages(ImagesIds.Select(id => UrlById(id)));
 
-
-            IDownloader syncDownloader = new SyncDownloader();
-
-            IDownloader asyncDownloader = new AsyncDownloader();
-
-
-            await WaitForDownloadAsync(asyncDownloader.DownloadImages(imagesUrls, SaveLocation));
-
-
-            Console.WriteLine("\nAll done!\n");
-
+                downloader.CleanUpTemp();
+            }
 
 
             Console.WriteLine("Press any key to continue ...");
@@ -48,25 +49,7 @@ namespace AsyncStreams
         }
 
 
-        private static async Task WaitForDownloadAsync(params Task[] downloadTasks)
-        {
-            await Task.Run(async () =>
-            {
-                int interval = 500;
-
-                while (!downloadTasks.All(task => task.IsCompleted))
-                {
-                    Console.Write("\rDownloading.");
-                    await Task.Delay(interval);
-                    Console.Write("\rDownloading..");
-                    await Task.Delay(interval);
-                    Console.Write("\rDownloading...");
-                    await Task.Delay(interval);
-                    Console.Write("\rDownloading   ");
-                }
-                Console.Write("\r              ");
-            });
-        }
+        private static string UrlById(string id) => $"{WebsiteURL}/{id}.jpg";
 
     }
 }

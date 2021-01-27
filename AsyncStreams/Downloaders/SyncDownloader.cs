@@ -2,87 +2,125 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net.Http;
+using AsyncLibrary;
 
 namespace AsyncStreams
 {
-    public class SyncDownloader : IDownloader
+    public class SyncDownloader : BaseDownloader
     {
-        // The location at which the images are temporarily stored.
-        public string TempDownloadLocation => @"C:\Users\ahmed\Downloads\temp\";
 
 
-        public async Task DownloadImages(IEnumerable<string> urls, string location)
+        #region Public Methods
+
+        public void DownloadImages(IEnumerable<string> urls)
         {
-            // The "IEnumerable" function that will save the images each at a time,
-            // when "MoveNext()" is called.
-            var images = SaveImages(urls);
+            Console.WriteLine("\nDownloading...\n");
 
-            // Download and move images to the given location.
-            await Task.Run(() => MoveDownloadedFiles(images, location));
+            // The "Enumerable" function that will download images each at a time
+            // when "MoveNext()" is called.
+            var downloadedImages = InitializeDownload(urls);
+
+            // Move downloaded images to the given location.
+            // But first, download them by calling "foreach" on the "Enumerable".
+            MoveDownloadedImages(downloadedImages);
+
+            Console.WriteLine();
+            Console.WriteLine("\nAll done!\n");
         }
 
+        #endregion
+
+
+        #region Download Pipelines
 
         /// <summary>
         /// A function that shows the compiler translation of "foreach" statement,
         /// which uses the "IEnumerator.MoveNext()" function to fetch the next result.
         /// </summary>
-        private void MoveDownloadedFilesDecomposed(IEnumerable<string> files, string location)
+        private void MoveDownloadedImagesDecomposed(IEnumerable<string> imagesPaths)
         {
-            var enumerator = files.GetEnumerator();
+            var enumerator = imagesPaths.GetEnumerator();
 
             try
             {
                 while (enumerator.MoveNext())
                 {
-                    var file = enumerator.Current;
+                    var imagePath = enumerator.Current;
 
 
-                    string fileName = file.Substring(TempDownloadLocation.Length);
+                    string imageName = imagePath[TempDownloadLocation.Length..];
 
-                    File.Move(file, location + fileName);
+                    File.Move(imagePath, DownloadLocation + imageName);
                 }
             }
             finally
             {
-                if (enumerator != null)
-                {
-                    enumerator.Dispose(); 
-                }
+                enumerator?.Dispose();
             }
         }
 
-
-        private void MoveDownloadedFiles(IEnumerable<string> files, string location)
+        /// <summary>
+        /// Move images to the download location once they've finished downloading.
+        /// </summary>
+        private void MoveDownloadedImages(IEnumerable<string> imagesPaths)
         {
-            foreach (var file in files)
+            foreach (var imagePath in imagesPaths)
             {
-                string fileName = file.Substring(TempDownloadLocation.Length);
+                string imageName = imagePath[TempDownloadLocation.Length..];
 
-                File.Move(file, location + fileName);
+                File.Move(imagePath, DownloadLocation + imageName);
             }
         }
 
 
-        private IEnumerable<string> SaveImages(IEnumerable<string> urls)
+        /// <summary>
+        /// Starting all the download operations synchronously one after the other.
+        /// </summary>
+        private IEnumerable<string> InitializeDownload(IEnumerable<string> urls)
         {
-            using WebClient client = new WebClient();
+            using var downloader = new HttpDownloader(TempDownloadLocation);
+
+            // The Key-Value Pair Collection that holds progress for each image.
+            var downloadProgress = new Dictionary<string, float>(urls.Select(url =>
+            {
+                // Get image name from url.
+                string imageName = url.Split('/').Last();
+
+                // Initialize Dictionary.
+                return new KeyValuePair<string, float>(imageName, 0);
+            }));
 
             foreach (var url in urls)
             {
-                string image = url.Split('/').Last();
+                // Get image name from url.
+                string imageName = url.Split('/').Last();
 
-                client.DownloadFile(new Uri(url), $"{TempDownloadLocation}{image}");
+                // Inistantiate a Progress object to notify download progress.
+                var progress = new Progress<ProgressReport>(report =>
+                {
+                    // Update Progress.
+                    downloadProgress[report.FileName] = report.Percentage;
+                    // Print Average.
+                    downloader.ThreadSafeLog(string.Format("\rDownloading {0:N2}%", downloadProgress.Values.Average()), false);
+                });
 
-                Console.Write($"\rThe image \"{image}\" has finished downloading");
-                Console.WriteLine();
-
-                yield return $"{TempDownloadLocation}{image}";
+                string downloadedImage = null;
+                try
+                {
+                    // Start downloading the image.
+                    downloadedImage = downloader.DownloadImageWithFeedback(url, imageName, progress);
+                }
+                catch (HttpRequestException)
+                {
+                    downloadProgress.Remove(imageName);
+                    continue;
+                }
+                yield return downloadedImage;
             }
         }
 
+        #endregion
 
     }
 }
