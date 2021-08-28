@@ -11,8 +11,8 @@ namespace AsyncLibrary
 
         #region Private Members
 
-        private HttpClient _client = new HttpClient();
-        private readonly object _logLock = new object();
+        private HttpClient _client = new();
+        private readonly object _logLock = new();
 
         public string DownloadLocation { get; }
 
@@ -36,12 +36,6 @@ namespace AsyncLibrary
 
         private bool disposed = false;
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
         protected virtual void Dispose(bool disposing)
         {
             if (disposed) return;
@@ -49,10 +43,16 @@ namespace AsyncLibrary
             if (disposing)
             {
                 _client?.Dispose();
+                _client = null;
             }
-            _client = null;
 
             disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         #endregion
